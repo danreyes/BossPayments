@@ -5,7 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 import type Stripe from "stripe";
 
 import { api } from "@/convex/_generated/api";
-import { getBaseUrl, stripe } from "@/lib/stripe";
+import { getBaseUrl, getStripe } from "@/lib/stripe";
 
 async function createCheckout(formData: FormData, method: "payto" | "card") {
   const shareToken = String(formData.get("shareToken") ?? "");
@@ -14,6 +14,7 @@ async function createCheckout(formData: FormData, method: "payto" | "card") {
 
   const amount = method === "card" ? Math.round(job.amountCents * 1.025) : job.amountCents;
   const paymentMethodTypes = (method === "card" ? ["card"] : ["payto"]) as unknown as Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
+  const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",

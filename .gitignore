@@ -32,3 +32,5 @@ Thumbs.db
 
 # local misc
 .vercel/
+# clerk configuration (can include secrets)
+/.clerk/

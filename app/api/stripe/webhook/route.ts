@@ -4,7 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import type Stripe from "stripe";
 
 import { api } from "@/convex/_generated/api";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   let event: Stripe.Event;
 
   try {
+    const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (error) {
     return new Response(`Webhook error: ${error instanceof Error ? error.message : "Invalid signature"}`, { status: 400 });

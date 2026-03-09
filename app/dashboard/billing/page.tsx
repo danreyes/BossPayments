@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
-import { getBaseUrl, stripe } from "@/lib/stripe";
+import { getBaseUrl, getStripe } from "@/lib/stripe";
 
 async function ensureCustomer(clerkUserId: string) {
   const clerkUser = await currentUser();
@@ -14,6 +14,7 @@ async function ensureCustomer(clerkUserId: string) {
   const existing = await fetchQuery(api.users.getByClerkId, { clerkId: clerkUserId });
   if (existing?.stripeCustomerId) return existing.stripeCustomerId;
 
+  const stripe = getStripe();
   const customer = await stripe.customers.create({
     email: clerkUser.emailAddresses[0]?.emailAddress,
     name: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || undefined,
@@ -38,6 +39,7 @@ export default async function BillingPage() {
     if (!userId) redirect("/sign-in");
 
     const customerId = await ensureCustomer(userId);
+    const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
@@ -54,6 +56,7 @@ export default async function BillingPage() {
     if (!userId) redirect("/sign-in");
 
     const customerId = await ensureCustomer(userId);
+    const stripe = getStripe();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${getBaseUrl()}/dashboard/billing`,
