@@ -6,7 +6,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PaidBoss",
-  description: "Tradie-friendly QR payments, subscriptions, and founder signals."
+  description: "Tradie-friendly QR payments, subscriptions, and founder signals.",
+  robots: {
+    index: false,
+    follow: false
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
