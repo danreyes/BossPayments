@@ -109,7 +109,7 @@ export default async function BillingPage({
 
   return (
     <div className="space-y-4">
-      <DashboardBackLink href={hasActiveSubscription ? "/dashboard" : "/"} label={hasActiveSubscription ? "Back to dashboard" : "Back to home"} />
+      {hasActiveSubscription && <DashboardBackLink href="/dashboard" label="Back to dashboard" />}
 
       {isOnboarding || isRequired ? (
         <Card className="border-emerald-400/20 bg-gradient-to-br from-emerald-500/12 via-card to-card">
@@ -165,34 +165,25 @@ export default async function BillingPage({
         </Card>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-4xl font-black tracking-tight">Billing</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {hasActiveSubscription && (
+      {hasActiveSubscription && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-4xl font-black tracking-tight">Billing</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="flex items-center gap-2 text-emerald-300">
               <CheckCircle2 className="h-5 w-5" />
               <span className="text-sm font-semibold">Subscription active</span>
             </div>
-          )}
-          <p className="text-sm text-muted-foreground">
-            {hasActiveSubscription
-              ? "Manage your cards, invoices, and cancellations in Customer Portal."
-              : <>PaidBoss is a flat <span className="font-semibold text-white">$29/month</span>. Start the subscription in Stripe Checkout, then manage cards, invoices, and cancellations in Customer Portal.</>}
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            {!hasActiveSubscription && (
-              <form action={startSubscription}>
-                <Button size="lg">Start $29/mo</Button>
-              </form>
-            )}
+            <p className="text-sm text-muted-foreground">
+              Manage your cards, invoices, and cancellations in Customer Portal.
+            </p>
             <form action={openPortal}>
-              <Button size="lg" variant={hasActiveSubscription ? "default" : "outline"}>Open Customer Portal</Button>
+              <Button size="lg">Open Customer Portal</Button>
             </form>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

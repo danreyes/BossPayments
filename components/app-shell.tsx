@@ -88,7 +88,41 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="mb-6 flex items-center justify-between gap-4 rounded-[28px] border border-white/10 bg-card/80 px-4 py-4 backdrop-blur">
         <HomeLogoLink />
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-2 sm:flex">
+          {hasActiveSubscription && (
+            <>
+              <div className="hidden items-center gap-2 sm:flex">
+                {nav.filter(item => !item.superadminOnly || isSuperadmin).map(({ href, label, icon: Icon }) => {
+                  const active = href === "/dashboard" ? pathname === "/dashboard" : pathname === href || pathname.startsWith(`${href}/`);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition",
+                        active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </Link>
+                  );
+                })}
+              </div>
+              <Button asChild size="lg" className="rounded-full px-5">
+                <Link href="/dashboard/jobs/new">
+                  <PlusCircle className="h-5 w-5" />
+                  New Job
+                </Link>
+              </Button>
+            </>
+          )}
+          <UserButton />
+        </div>
+      </header>
+      <main className="flex-1">{children}</main>
+      {hasActiveSubscription && (
+        <nav className="safe-bottom fixed bottom-0 left-0 right-0 border-t border-white/10 bg-slate-950/95 px-3 pt-3 backdrop-blur sm:hidden">
+          <div className={cn("mx-auto grid max-w-6xl gap-2", isSuperadmin ? "grid-cols-4" : "grid-cols-3")}>
             {nav.filter(item => !item.superadminOnly || isSuperadmin).map(({ href, label, icon: Icon }) => {
               const active = href === "/dashboard" ? pathname === "/dashboard" : pathname === href || pathname.startsWith(`${href}/`);
               return (
@@ -96,46 +130,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   key={href}
                   href={href}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition",
-                    active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    "flex min-h-12 flex-col items-center justify-center rounded-2xl px-2 py-2 text-xs font-semibold",
+                    active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="mb-1 h-4 w-4" />
                   {label}
                 </Link>
               );
             })}
           </div>
-          <Button asChild size="lg" className="rounded-full px-5">
-            <Link href="/dashboard/jobs/new">
-              <PlusCircle className="h-5 w-5" />
-              New Job
-            </Link>
-          </Button>
-          <UserButton />
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-      <nav className="safe-bottom fixed bottom-0 left-0 right-0 border-t border-white/10 bg-slate-950/95 px-3 pt-3 backdrop-blur sm:hidden">
-        <div className={cn("mx-auto grid max-w-6xl gap-2", isSuperadmin ? "grid-cols-4" : "grid-cols-3")}>
-          {nav.filter(item => !item.superadminOnly || isSuperadmin).map(({ href, label, icon: Icon }) => {
-            const active = href === "/dashboard" ? pathname === "/dashboard" : pathname === href || pathname.startsWith(`${href}/`);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex min-h-12 flex-col items-center justify-center rounded-2xl px-2 py-2 text-xs font-semibold",
-                  active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                )}
-              >
-                <Icon className="mb-1 h-4 w-4" />
-                {label}
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+        </nav>
+      )}
     </div>
   );
 }
