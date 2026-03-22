@@ -1,26 +1,28 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
-import { fetchQuery } from "convex/nextjs";
 
+import { internal } from "@/convex/_generated/api";
+import { adminQuery } from "@/lib/convex-admin";
+import { DashboardBackLink } from "@/components/dashboard/back-link";
 import { InterviewTracker } from "@/components/founder/interview-tracker";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
-import { api } from "@/convex/_generated/api";
 
 export default async function FounderPage() {
   const user = await currentUser();
   if (!user || user.publicMetadata.role !== "superadmin") redirect("/dashboard");
 
   const [kpis, interviews] = await Promise.all([
-    fetchQuery(api.founder.getKpis, {}),
-    fetchQuery(api.founder.listInterviews, {})
+    adminQuery(internal.founder.getKpis, {}),
+    adminQuery(internal.founder.listInterviews, {})
   ]);
 
   const badgeVariant = kpis.successLevel === "GREEN" ? "success" : kpis.successLevel === "YELLOW" ? "warning" : "danger";
 
   return (
     <div className="space-y-5">
+      <DashboardBackLink />
       <Card className="bg-gradient-to-br from-white/8 via-card to-card">
         <CardHeader>
           <Badge variant={badgeVariant}>Success Level {kpis.successLevel}</Badge>

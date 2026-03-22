@@ -42,7 +42,9 @@ export default defineSchema({
     createdAt: v.number()
   })
     .index("by_merchant", ["merchantId"])
-    .index("by_job", ["jobId"]),
+    .index("by_job", ["jobId"])
+    .index("by_stripe_checkout_session_id", ["stripeCheckoutSessionId"])
+    .index("by_stripe_payment_intent_id", ["stripePaymentIntentId"]),
   interviews: defineTable({
     merchantName: v.string(),
     likelihood: v.number(),

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 
 import { AnalyticsChart } from "@/components/analytics-chart";
+import { DashboardBackLink } from "@/components/dashboard/back-link";
 import { SegmentControl } from "@/components/segment-control";
 import { Card, CardContent } from "@/components/ui/card";
 import { ANALYTICS_FILTERS, type AnalyticsFilter } from "@/lib/constants";
@@ -24,6 +25,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-5">
+      <DashboardBackLink />
       <div>
         <h1 className="text-4xl font-black tracking-tight">Analytics</h1>
         <p className="mt-2 text-sm text-muted-foreground">Live sales signal without the spreadsheet headache.</p>
