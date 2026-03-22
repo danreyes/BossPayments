@@ -112,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               New Job
             </Link>
           </Button>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
       </header>
       <main className="flex-1">{children}</main>
