@@ -1,34 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useRef, useTransition } from "react";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 
+import { createFounderInterview } from "@/app/founder/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { api } from "@/convex/_generated/api";
-
-const initialState = {
-  merchantName: "",
-  likelihood: "7",
-  willingness: "yes",
-  oneThingToTellMates: ""
-};
 
 export function InterviewTracker({ interviews }: { interviews: any[] }) {
-  const createInterview = useMutation(api.founder.createInterview);
-  const [form, setForm] = useState(initialState);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [isPending, startTransition] = useTransition();
 
-  async function submit() {
-    await createInterview({
-      merchantName: form.merchantName,
-      likelihood: Number(form.likelihood),
-      willingness: form.willingness as "yes" | "maybe" | "no",
-      oneThingToTellMates: form.oneThingToTellMates
+  function submit(formData: FormData) {
+    startTransition(async () => {
+      try {
+        await createFounderInterview(formData);
+        toast.success("Interview saved.");
+        formRef.current?.reset();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not save interview.");
+      }
     });
-    setForm(initialState);
   }
 
   function exportCsv() {
@@ -52,13 +47,15 @@ export function InterviewTracker({ interviews }: { interviews: any[] }) {
         <Button type="button" variant="outline" onClick={exportCsv}><Download className="h-4 w-4" /> Export CSV</Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Merchant name" value={form.merchantName} onChange={(event) => setForm((current) => ({ ...current, merchantName: event.target.value }))} />
-          <Input placeholder="Likelihood 1-10" inputMode="numeric" value={form.likelihood} onChange={(event) => setForm((current) => ({ ...current, likelihood: event.target.value }))} />
-          <Input placeholder="yes / maybe / no" value={form.willingness} onChange={(event) => setForm((current) => ({ ...current, willingness: event.target.value.toLowerCase() }))} />
-          <Input placeholder="One thing to tell mates" value={form.oneThingToTellMates} onChange={(event) => setForm((current) => ({ ...current, oneThingToTellMates: event.target.value }))} />
-        </div>
-        <Button type="button" onClick={submit}>Save interview</Button>
+        <form ref={formRef} action={submit} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input name="merchantName" placeholder="Merchant name" maxLength={200} />
+            <Input name="likelihood" placeholder="Likelihood 1-10" inputMode="numeric" defaultValue="7" />
+            <Input name="willingness" placeholder="yes / maybe / no" defaultValue="yes" />
+            <Input name="oneThingToTellMates" placeholder="One thing to tell mates" maxLength={1000} />
+          </div>
+          <Button type="submit" disabled={isPending}>{isPending ? "Saving..." : "Save interview"}</Button>
+        </form>
         <div className="overflow-hidden rounded-3xl border border-white/10">
           <Table>
             <TableHeader>

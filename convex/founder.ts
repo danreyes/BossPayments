@@ -2,9 +2,9 @@ import { subDays } from "date-fns";
 import { v } from "convex/values";
 
 import { ACTIVE_MERCHANTS_TARGET, JOBS_TARGET, PAYTO_TARGET, WILLINGNESS_TARGET } from "../lib/constants";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 
-export const listInterviews = query({
+export const listInterviews = internalQuery({
   args: {},
   handler: async (ctx) => {
     const interviews = await ctx.db.query("interviews").collect();
@@ -12,7 +12,7 @@ export const listInterviews = query({
   }
 });
 
-export const createInterview = mutation({
+export const createInterview = internalMutation({
   args: {
     merchantName: v.string(),
     likelihood: v.number(),
@@ -24,7 +24,7 @@ export const createInterview = mutation({
   }
 });
 
-export const getKpis = query({
+export const getKpis = internalQuery({
   args: {},
   handler: async (ctx) => {
     const [users, jobs, interviews] = await Promise.all([

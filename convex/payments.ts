@@ -1,8 +1,8 @@
 import { v } from "convex/values";
 
-import { mutation } from "./_generated/server";
+import { internalMutation } from "./_generated/server";
 
-export const recordCheckoutCompleted = mutation({
+export const recordCheckoutCompleted = internalMutation({
   args: {
     stripeCheckoutSessionId: v.string(),
     stripePaymentIntentId: v.string(),
@@ -12,8 +12,18 @@ export const recordCheckoutCompleted = mutation({
     amountCents: v.number()
   },
   handler: async (ctx, args) => {
+    const existingPayment = await ctx.db
+      .query("payments")
+      .withIndex("by_stripe_checkout_session_id", (q) => q.eq("stripeCheckoutSessionId", args.stripeCheckoutSessionId))
+      .unique();
+
+    if (existingPayment) {
+      return existingPayment._id;
+    }
+
     const job = await ctx.db.get(args.jobId);
     if (!job) throw new Error("Job not found");
+    if (job.merchantId !== args.merchantId) throw new Error("Merchant mismatch");
 
     await ctx.db.patch(job._id, {
       status: "paid",
@@ -23,7 +33,7 @@ export const recordCheckoutCompleted = mutation({
       paidAt: Date.now()
     });
 
-    await ctx.db.insert("payments", {
+    return await ctx.db.insert("payments", {
       merchantId: args.merchantId,
       jobId: args.jobId,
       stripeCheckoutSessionId: args.stripeCheckoutSessionId,
@@ -35,18 +45,25 @@ export const recordCheckoutCompleted = mutation({
   }
 });
 
-export const syncSubscription = mutation({
+export const syncSubscription = internalMutation({
   args: {
     stripeCustomerId: v.string(),
     status: v.string(),
     currentPeriodEnd: v.number()
   },
   handler: async (ctx, args) => {
-    const user = await ctx.db.query("users").withIndex("by_stripe_customer_id", (q) => q.eq("stripeCustomerId", args.stripeCustomerId)).unique();
-    if (!user) return;
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_stripe_customer_id", (q) => q.eq("stripeCustomerId", args.stripeCustomerId))
+      .unique();
+
+    if (!user) return null;
+
     await ctx.db.patch(user._id, {
       subscriptionStatus: args.status,
       subscriptionCurrentPeriodEnd: args.currentPeriodEnd
     });
+
+    return user._id;
   }
 });
