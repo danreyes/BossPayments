@@ -8,10 +8,11 @@ import { QrShareView } from "@/components/qr-share-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export default function JobSharePage() {
   const params = useParams<{ jobId: string }>();
-  const job = useQuery(api.jobs.getShareDataByJobId, { jobId: params.jobId as any });
+  const job = useQuery(api.jobs.getShareDataByJobId, { jobId: params.jobId as Id<"jobs"> });
 
   if (job === undefined) return <Skeleton className="h-[600px] rounded-[32px]" />;
   if (job === null) {

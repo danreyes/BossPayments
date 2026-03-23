@@ -2,8 +2,9 @@ import { endOfDay, endOfMonth, format, startOfDay, startOfMonth, subDays, subMon
 import { v } from "convex/values";
 
 import { query } from "./_generated/server";
+import type { QueryCtx } from "./_generated/server";
 
-async function getIdentity(ctx: any) {
+async function getIdentity(ctx: QueryCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
   return identity;

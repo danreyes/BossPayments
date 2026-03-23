@@ -45,6 +45,11 @@ export const recordCheckoutCompleted = internalMutation({
   }
 });
 
+const VALID_SUBSCRIPTION_STATUSES = [
+  "active", "canceled", "incomplete", "incomplete_expired",
+  "past_due", "paused", "trialing", "unpaid"
+];
+
 export const syncSubscription = internalMutation({
   args: {
     stripeCustomerId: v.string(),
@@ -52,12 +57,21 @@ export const syncSubscription = internalMutation({
     currentPeriodEnd: v.number()
   },
   handler: async (ctx, args) => {
+    if (!VALID_SUBSCRIPTION_STATUSES.includes(args.status)) {
+      throw new Error(`Invalid subscription status: ${args.status}`);
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_stripe_customer_id", (q) => q.eq("stripeCustomerId", args.stripeCustomerId))
       .unique();
 
     if (!user) return null;
+
+    // Idempotency: skip if status and period haven't changed
+    if (user.subscriptionStatus === args.status && user.subscriptionCurrentPeriodEnd === args.currentPeriodEnd) {
+      return user._id;
+    }
 
     await ctx.db.patch(user._id, {
       subscriptionStatus: args.status,

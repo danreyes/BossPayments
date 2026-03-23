@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     const stripe = getStripe();
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (error) {
-    return new Response(`Webhook error: ${error instanceof Error ? error.message : "Invalid signature"}`, { status: 400 });
+    console.error("Webhook signature verification failed:", error instanceof Error ? error.message : "Unknown error");
+    return new Response("Invalid signature", { status: 400 });
   }
 
   if (event.type === "checkout.session.completed") {

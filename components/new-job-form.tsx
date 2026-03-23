@@ -13,9 +13,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { QUICK_AMOUNTS } from "@/lib/constants";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 const DRAFT_KEY = "paidboss-new-job-draft";
 const OFFLINE_QUEUE_KEY = "paidboss-offline-jobs";
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 type Draft = {
   amount: string;
@@ -93,7 +96,7 @@ export function NewJobForm() {
       body: file
     });
     const { storageId } = await result.json();
-    await attachPhoto({ jobId: jobId as any, storageId });
+    await attachPhoto({ jobId: jobId as Id<"jobs">, storageId: storageId as Id<"_storage"> });
   }
 
   function queueOfflineJob() {
@@ -112,7 +115,15 @@ export function NewJobForm() {
     startTransition(async () => {
       try {
         const amountCents = Math.round(Number(draft.amount) * 100);
-        const jobId = await createJob({ amountCents, description: draft.description });
+        if (!amountCents || amountCents < 1 || amountCents > 10_000_000) {
+          toast.error("Amount must be between $0.01 and $100,000.");
+          return;
+        }
+        if (!draft.description.trim()) {
+          toast.error("Description is required.");
+          return;
+        }
+        const jobId = await createJob({ amountCents, description: draft.description.trim().slice(0, 500) });
         await uploadIfNeeded(jobId);
         localStorage.removeItem(DRAFT_KEY);
         toast.success("QR ready to share.");
@@ -157,7 +168,18 @@ export function NewJobForm() {
             <ImagePlus className="h-5 w-5" />
             {file ? file.name : "Tap to attach a job photo"}
           </label>
-          <input id="photo" type="file" accept="image/*" className="sr-only" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+          <input id="photo" type="file" accept="image/jpeg,image/png,image/webp,image/heic" className="sr-only" onChange={(event) => {
+            const selected = event.target.files?.[0] ?? null;
+            if (selected && !ALLOWED_IMAGE_TYPES.includes(selected.type)) {
+              toast.error("Only JPEG, PNG, WebP, and HEIC images are allowed.");
+              return;
+            }
+            if (selected && selected.size > MAX_FILE_SIZE) {
+              toast.error("Image must be under 10MB.");
+              return;
+            }
+            setFile(selected);
+          }} />
         </div>
         <Button size="lg" className="w-full text-base" disabled={isPending} onClick={onSubmit}>
           {isPending ? "Building payment link..." : "Generate QR & Link"}

@@ -2,7 +2,9 @@ import { v } from "convex/values";
 
 import { internalMutation, mutation, query } from "./_generated/server";
 
-async function getIdentity(ctx: any) {
+import type { QueryCtx, MutationCtx } from "./_generated/server";
+
+async function getIdentity(ctx: QueryCtx | MutationCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) throw new Error("Not authenticated");
   return identity;
@@ -15,7 +17,7 @@ export const ensureCurrentUser = mutation({
     const clerkId = identity.subject;
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", clerkId))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
       .unique();
     const now = Date.now();
 
@@ -46,7 +48,7 @@ export const getCurrentUser = query({
     const identity = await getIdentity(ctx);
     return await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
       .unique();
   }
 });
@@ -56,7 +58,7 @@ export const setStripeCustomerId = internalMutation({
   handler: async (ctx, args) => {
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", args.clerkId))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", args.clerkId))
       .unique();
 
     if (!user) throw new Error("User not found");
